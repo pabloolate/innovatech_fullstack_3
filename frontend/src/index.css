@@ -1,0 +1,509 @@
+:root {
+  --app-bg: #f4f6f9;
+  --app-surface: #ffffff;
+  --app-surface-soft: #f8f9fa;
+  --app-border: rgba(15, 23, 42, 0.12);
+  --app-text: #212529;
+  --app-muted: #6c757d;
+  --app-shadow: 0 0.5rem 1.25rem rgba(15, 23, 42, 0.08);
+  --app-topbar-bg: rgba(255, 255, 255, 0.88);
+  --app-topbar-border: rgba(15, 23, 42, 0.10);
+  --app-link-bg: rgba(13, 110, 253, 0.08);
+  --app-link-text: #1f2937;
+  --app-link-hover: rgba(13, 110, 253, 0.13);
+  --app-link-active-bg: #0d6efd;
+  --app-link-active-text: #ffffff;
+}
+
+body.app-dark {
+  --app-bg: #0f172a;
+  --app-surface: #111827;
+  --app-surface-soft: #1f2937;
+  --app-border: rgba(255, 255, 255, 0.12);
+  --app-text: #e5e7eb;
+  --app-muted: #9ca3af;
+  --app-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.45);
+  --app-topbar-bg: rgba(17, 24, 39, 0.92);
+  --app-topbar-border: rgba(255, 255, 255, 0.10);
+  --app-link-bg: rgba(96, 165, 250, 0.10);
+  --app-link-text: #e5e7eb;
+  --app-link-hover: rgba(96, 165, 250, 0.18);
+  --app-link-active-bg: #2563eb;
+  --app-link-active-text: #ffffff;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-text);
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(13, 110, 253, 0.10), transparent 32rem),
+    radial-gradient(circle at top right, rgba(25, 135, 84, 0.08), transparent 28rem),
+    var(--app-bg);
+}
+
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  padding: 0.75rem 1rem;
+  background: var(--app-topbar-bg);
+  border-bottom: 1px solid var(--app-topbar-border);
+  backdrop-filter: blur(14px);
+}
+
+.app-topbar-inner {
+  width: min(1720px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-logo-link {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.app-logo {
+  width: var(--logo-width, 230px);
+  height: var(--logo-height, 58px);
+  object-fit: contain;
+  display: block;
+}
+
+/*
+  Para ajustar el logo después:
+  - cambia --logo-width y --logo-height en el style del img dentro de Layout.jsx
+  - ejemplo: --logo-width: 190px; --logo-height: 48px;
+*/
+
+.app-topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.2rem 0;
+}
+
+.app-topnav-link {
+  color: var(--app-link-text);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  background: transparent;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.app-topnav-link:hover {
+  color: var(--app-link-text);
+  background: var(--app-link-hover);
+  transform: translateY(-1px);
+}
+
+.app-topnav-link.active {
+  background: var(--app-link-active-bg);
+  color: var(--app-link-active-text);
+  box-shadow: 0 0.45rem 0.9rem rgba(13, 110, 253, 0.22);
+}
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(13, 110, 253, 0.45);
+}
+
+.theme-toggle.active {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.theme-toggle-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-main {
+  width: min(1720px, 100%);
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.app-content-card {
+  min-height: calc(100vh - 6.5rem);
+}
+
+.card-soft {
+  border: 0;
+  border-radius: 1rem;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow);
+}
+
+.card,
+.modal-content,
+.dropdown-menu {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+}
+
+.bg-light {
+  background-color: var(--app-surface-soft) !important;
+}
+
+.text-muted,
+.small-muted {
+  color: var(--app-muted) !important;
+}
+
+.border,
+.border-bottom,
+.border-top,
+.border-start,
+.border-end {
+  border-color: var(--app-border) !important;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.badge-role {
+  font-size: 0.85rem;
+}
+
+.pre-wrap {
+  white-space: pre-wrap;
+}
+
+.small-muted {
+  font-size: 0.85rem;
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-control,
+.form-select {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+}
+
+.form-control::placeholder {
+  color: var(--app-muted);
+}
+
+.modal {
+  color: var(--app-text);
+}
+
+.progress {
+  background-color: rgba(148, 163, 184, 0.22);
+}
+
+/* Compatibilidad por si queda algún link viejo en algún componente */
+.sidebar-link {
+  text-decoration: none;
+  color: var(--app-link-text);
+  display: block;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-link:hover {
+  background: var(--app-link-hover);
+}
+
+.sidebar-link.active {
+  background: var(--app-link-active-bg);
+  color: var(--app-link-active-text);
+}
+
+.sidebar-column {
+  min-width: 280px;
+  max-width: 280px;
+}
+
+@media (max-width: 1199.98px) {
+  .app-topbar-inner {
+    flex-wrap: wrap;
+  }
+
+  .app-topnav {
+    order: 3;
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .app-topbar-actions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-topbar {
+    padding: 0.65rem;
+  }
+
+  .app-logo {
+    width: min(var(--logo-width, 230px), 185px);
+    height: auto;
+    max-height: var(--logo-height, 58px);
+  }
+
+  .theme-toggle-text {
+    display: none;
+  }
+
+  .app-main {
+    padding: 0.65rem;
+  }
+
+  .app-content-card {
+    min-height: calc(100vh - 8rem);
+  }
+}
+
+@media (max-width: 991.98px) {
+  .sidebar-column {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
+/* =========================================================
+   FIX MODO OSCURO - CONTRASTE GENERAL
+   Pegar al final de frontend/src/index.css
+   ========================================================= */
+
+body.app-dark {
+  color-scheme: dark;
+}
+
+/* Fondos Bootstrap que estaban quedando blancos */
+body.app-dark .bg-white {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+}
+
+body.app-dark .bg-light {
+  background-color: var(--app-surface-soft) !important;
+  color: var(--app-text) !important;
+}
+
+/* Cards internas y paneles */
+body.app-dark .card,
+body.app-dark .card-body,
+body.app-dark .card-header,
+body.app-dark .modal-content {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+}
+
+body.app-dark .card-header {
+  border-color: var(--app-border) !important;
+}
+
+/* Listas tipo línea operativa */
+body.app-dark .border,
+body.app-dark .border-bottom,
+body.app-dark .border-top,
+body.app-dark .border-start,
+body.app-dark .border-end {
+  border-color: var(--app-border) !important;
+}
+
+body.app-dark .text-muted,
+body.app-dark .small-muted {
+  color: var(--app-muted) !important;
+}
+
+/* Botones/filas que usan bg-white */
+body.app-dark button.bg-white,
+body.app-dark .bg-white button,
+body.app-dark .w-100.bg-white {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+}
+
+body.app-dark button.bg-white:hover,
+body.app-dark .w-100.bg-white:hover {
+  background-color: var(--app-surface-soft) !important;
+}
+
+/* Evita textos casi invisibles dentro de filas */
+body.app-dark .fw-semibold,
+body.app-dark .fw-bold,
+body.app-dark h1,
+body.app-dark h2,
+body.app-dark h3,
+body.app-dark h4,
+body.app-dark h5,
+body.app-dark h6 {
+  color: var(--app-text);
+}
+
+/* Barras de progreso en oscuro */
+body.app-dark .progress {
+  background-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+/* Formularios */
+body.app-dark .form-control,
+body.app-dark .form-select {
+  background-color: #0f172a !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+body.app-dark .form-control::placeholder {
+  color: var(--app-muted) !important;
+}
+
+/* Modales */
+body.app-dark .modal-header,
+body.app-dark .modal-footer {
+  border-color: var(--app-border) !important;
+}
+
+/* Tablas que puedan quedar por ahí */
+body.app-dark .table {
+  --bs-table-bg: var(--app-surface);
+  --bs-table-color: var(--app-text);
+  --bs-table-border-color: var(--app-border);
+  --bs-table-striped-bg: var(--app-surface-soft);
+  --bs-table-hover-bg: rgba(96, 165, 250, 0.10);
+}
+
+body.app-dark .table-light {
+  --bs-table-bg: var(--app-surface-soft);
+  --bs-table-color: var(--app-text);
+}
+
+/* Nav y botones outline en oscuro */
+body.app-dark .btn-outline-primary {
+  color: #60a5fa;
+  border-color: #2563eb;
+}
+
+body.app-dark .btn-outline-primary:hover,
+body.app-dark .btn-outline-primary.active {
+  color: #ffffff;
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+body.app-dark .btn-outline-secondary {
+  color: #cbd5e1;
+  border-color: #64748b;
+}
+
+body.app-dark .btn-outline-secondary:hover {
+  color: #ffffff;
+  background-color: #475569;
+  border-color: #475569;
+}
+
+body.app-dark .btn-outline-dark {
+  color: #e5e7eb;
+  border-color: #64748b;
+}
+
+body.app-dark .btn-outline-dark:hover,
+body.app-dark .btn-dark {
+  color: #ffffff;
+  background-color: #334155;
+  border-color: #334155;
+}
+
+/* Badges suaves y pills con opacidad */
+body.app-dark .bg-primary.bg-opacity-10,
+body.app-dark .bg-success.bg-opacity-10,
+body.app-dark .bg-warning.bg-opacity-10,
+body.app-dark .bg-danger.bg-opacity-10,
+body.app-dark .bg-info.bg-opacity-10,
+body.app-dark .bg-secondary.bg-opacity-10,
+body.app-dark .bg-dark.bg-opacity-10 {
+  color: var(--app-text) !important;
+}
+
+/* Scrollbars más limpias en oscuro */
+body.app-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.app-dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+body.app-dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 999px;
+}
+
+body.app-dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
