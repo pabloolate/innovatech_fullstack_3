@@ -11,7 +11,8 @@ class RuteadorServicioTest {
             "http://localhost:8081/",
             "http://localhost:8082/",
             "http://localhost:8083/",
-            "http://localhost:8084/"
+            "http://localhost:8084/",
+            "http://localhost:8085/"
     );
 
     @Test
@@ -28,6 +29,8 @@ class RuteadorServicioTest {
         assertEquals("http://localhost:8084", ruteador.resolverUrlBase("/api/kpi-proyecto"));
         assertEquals("http://localhost:8084", ruteador.resolverUrlBase("/api/kpi-recurso"));
         assertEquals("http://localhost:8084", ruteador.resolverUrlBase("/api/reportes-generados"));
+        assertEquals("http://localhost:8085", ruteador.resolverUrlBase("/api/calendario/tareas/1/sync"));
+        assertEquals("http://localhost:8085", ruteador.resolverUrlBase("/api/calendario/eventos"));
     }
 
     @Test
@@ -44,6 +47,7 @@ class RuteadorServicioTest {
     void constructor_urlBlanca_lanzaExcepcion() {
         assertThrows(IllegalArgumentException.class,
                 () -> new RuteadorServicio("", "http://localhost:8082/",
-                        "http://localhost:8083/", "http://localhost:8084/"));
+                        "http://localhost:8083/", "http://localhost:8084/",
+                        "http://localhost:8085/"));
     }
 }
