@@ -10,17 +10,20 @@ public class RuteadorServicio {
     private final String urlProyectos;
     private final String urlRecursos;
     private final String urlMonitoreo;
+    private final String urlCalendario;
 
     public RuteadorServicio(
             @Value("${servicios.usuarios.url}") String urlUsuarios,
             @Value("${servicios.proyectos.url}") String urlProyectos,
             @Value("${servicios.recursos.url}") String urlRecursos,
-            @Value("${servicios.monitoreo.url}") String urlMonitoreo
+            @Value("${servicios.monitoreo.url}") String urlMonitoreo,
+            @Value("${servicios.calendario.url}") String urlCalendario
     ) {
         this.urlUsuarios = limpiarUrlBase(urlUsuarios);
         this.urlProyectos = limpiarUrlBase(urlProyectos);
         this.urlRecursos = limpiarUrlBase(urlRecursos);
         this.urlMonitoreo = limpiarUrlBase(urlMonitoreo);
+        this.urlCalendario = limpiarUrlBase(urlCalendario);
     }
 
     public String resolverUrlBase(String ruta) {
@@ -49,6 +52,10 @@ public class RuteadorServicio {
                 || ruta.startsWith("/api/kpi-recurso")
                 || ruta.startsWith("/api/reportes-generados")) {
             return urlMonitoreo;
+        }
+
+        if (ruta.startsWith("/api/calendario")) {
+            return urlCalendario;
         }
 
         throw new IllegalArgumentException("No existe microservicio configurado para la ruta: " + ruta);
