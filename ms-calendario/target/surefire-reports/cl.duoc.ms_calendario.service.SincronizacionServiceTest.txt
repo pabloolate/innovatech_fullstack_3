@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: cl.duoc.ms_calendario.service.SincronizacionServiceTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.87 s -- in cl.duoc.ms_calendario.service.SincronizacionServiceTest

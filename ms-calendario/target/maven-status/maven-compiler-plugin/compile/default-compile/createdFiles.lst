@@ -1,0 +1,11 @@
+cl\duoc\ms_calendario\service\SincronizacionService.class
+cl\duoc\ms_calendario\model\VinculoCalendario.class
+cl\duoc\ms_calendario\config\GoogleCalendarConfig.class
+cl\duoc\ms_calendario\model\VinculoCalendario$VinculoCalendarioBuilder.class
+cl\duoc\ms_calendario\dto\EventoCalendarioDto.class
+cl\duoc\ms_calendario\service\GoogleCalendarService.class
+cl\duoc\ms_calendario\repository\VinculoCalendarioRepository.class
+cl\duoc\ms_calendario\MsCalendarioApplication.class
+cl\duoc\ms_calendario\controller\CalendarioController.class
+cl\duoc\ms_calendario\dto\SincronizarRequestDto.class
+cl\duoc\ms_calendario\dto\EventoCalendarioDto$EventoCalendarioDtoBuilder.class
