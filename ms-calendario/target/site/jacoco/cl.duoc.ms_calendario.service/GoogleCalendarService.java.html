@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleCalendarService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ms-calendario</a> &gt; <a href="index.source.html" class="el_package">cl.duoc.ms_calendario.service</a> &gt; <span class="el_source">GoogleCalendarService.java</span></div><h1>GoogleCalendarService.java</h1><pre class="source lang-java linenums">package cl.duoc.ms_calendario.service;
+
+import cl.duoc.ms_calendario.dto.EventoCalendarioDto;
+import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.TimeZone;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Service
+public class GoogleCalendarService {
+
+    private final Calendar calendarService;
+    private final String calendarId;
+    private final TimeZone timezone;
+
+    public GoogleCalendarService(
+            Calendar calendarService,
+            @Value(&quot;${app.calendar.id}&quot;) String calendarId,
+<span class="nc" id="L28">            @Value(&quot;${app.calendar.timezone}&quot;) String timezoneId) {</span>
+<span class="nc" id="L29">        this.calendarService = calendarService;</span>
+<span class="nc" id="L30">        this.calendarId = calendarId;</span>
+<span class="nc" id="L31">        this.timezone = TimeZone.getTimeZone(timezoneId);</span>
+<span class="nc" id="L32">    }</span>
+
+    public String crearEvento(String titulo, String descripcion,
+                              LocalDate fechaInicio, LocalDate fechaFin,
+                              String ubicacion) throws IOException {
+
+<span class="nc" id="L38">        Event event = new Event()</span>
+<span class="nc" id="L39">                .setSummary(titulo)</span>
+<span class="nc" id="L40">                .setDescription(descripcion)</span>
+<span class="nc" id="L41">                .setLocation(ubicacion);</span>
+
+<span class="nc" id="L43">        ZonedDateTime inicio = fechaInicio.atStartOfDay(ZoneId.of(timezone.getID()));</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        ZonedDateTime fin = fechaFin != null</span>
+<span class="nc" id="L45">                ? fechaFin.atStartOfDay(ZoneId.of(timezone.getID()))</span>
+<span class="nc" id="L46">                : inicio.plusHours(1);</span>
+
+<span class="nc" id="L48">        event.setStart(new EventDateTime()</span>
+<span class="nc" id="L49">                .setDateTime(new DateTime(inicio.toInstant().toEpochMilli()))</span>
+<span class="nc" id="L50">                .setTimeZone(timezone.getID()));</span>
+<span class="nc" id="L51">        event.setEnd(new EventDateTime()</span>
+<span class="nc" id="L52">                .setDateTime(new DateTime(fin.toInstant().toEpochMilli()))</span>
+<span class="nc" id="L53">                .setTimeZone(timezone.getID()));</span>
+
+<span class="nc" id="L55">        Event creado = calendarService.events().insert(calendarId, event).execute();</span>
+<span class="nc" id="L56">        return creado.getId();</span>
+    }
+
+    public void actualizarEvento(String idEventoGoogle, String titulo, String descripcion,
+                                 LocalDate fechaInicio, LocalDate fechaFin,
+                                 String ubicacion) throws IOException {
+
+<span class="nc" id="L63">        Event event = calendarService.events().get(calendarId, idEventoGoogle).execute();</span>
+<span class="nc" id="L64">        event.setSummary(titulo);</span>
+<span class="nc" id="L65">        event.setDescription(descripcion);</span>
+<span class="nc" id="L66">        event.setLocation(ubicacion);</span>
+
+<span class="nc" id="L68">        ZonedDateTime inicio = fechaInicio.atStartOfDay(ZoneId.of(timezone.getID()));</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        ZonedDateTime fin = fechaFin != null</span>
+<span class="nc" id="L70">                ? fechaFin.atStartOfDay(ZoneId.of(timezone.getID()))</span>
+<span class="nc" id="L71">                : inicio.plusHours(1);</span>
+
+<span class="nc" id="L73">        event.setStart(new EventDateTime()</span>
+<span class="nc" id="L74">                .setDateTime(new DateTime(inicio.toInstant().toEpochMilli()))</span>
+<span class="nc" id="L75">                .setTimeZone(timezone.getID()));</span>
+<span class="nc" id="L76">        event.setEnd(new EventDateTime()</span>
+<span class="nc" id="L77">                .setDateTime(new DateTime(fin.toInstant().toEpochMilli()))</span>
+<span class="nc" id="L78">                .setTimeZone(timezone.getID()));</span>
+
+<span class="nc" id="L80">        calendarService.events().update(calendarId, idEventoGoogle, event).execute();</span>
+<span class="nc" id="L81">    }</span>
+
+    public void eliminarEvento(String idEventoGoogle) throws IOException {
+<span class="nc" id="L84">        calendarService.events().delete(calendarId, idEventoGoogle).execute();</span>
+<span class="nc" id="L85">    }</span>
+
+    public List&lt;EventoCalendarioDto&gt; listarEventos() throws IOException {
+<span class="nc" id="L88">        var events = calendarService.events().list(calendarId)</span>
+<span class="nc" id="L89">                .setMaxResults(100)</span>
+<span class="nc" id="L90">                .setOrderBy(&quot;startTime&quot;)</span>
+<span class="nc" id="L91">                .setSingleEvents(true)</span>
+<span class="nc" id="L92">                .execute();</span>
+
+<span class="nc" id="L94">        return events.getItems().stream()</span>
+<span class="nc" id="L95">                .map(e -&gt; EventoCalendarioDto.builder()</span>
+<span class="nc" id="L96">                        .id(e.getId())</span>
+<span class="nc" id="L97">                        .titulo(e.getSummary())</span>
+<span class="nc" id="L98">                        .descripcion(e.getDescription())</span>
+<span class="nc" id="L99">                        .fechaInicio(formatearFecha(e.getStart()))</span>
+<span class="nc" id="L100">                        .fechaFin(formatearFecha(e.getEnd()))</span>
+<span class="nc" id="L101">                        .link(e.getHtmlLink())</span>
+<span class="nc" id="L102">                        .build())</span>
+<span class="nc" id="L103">                .toList();</span>
+    }
+
+    private String formatearFecha(EventDateTime eventDateTime) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (eventDateTime == null) return null;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (eventDateTime.getDateTime() != null) {</span>
+<span class="nc" id="L109">            return eventDateTime.getDateTime().toString();</span>
+        }
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (eventDateTime.getDate() != null) {</span>
+<span class="nc" id="L112">            return eventDateTime.getDate().toString();</span>
+        }
+<span class="nc" id="L114">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
