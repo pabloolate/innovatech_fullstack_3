@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { proyectosApi } from '../services/api.js';
+import { proyectosApi, calendarioApi } from '../services/api.js';
 
 const estadoProyectoOptions = ['PLANIFICADO', 'EN_EJECUCION', 'PAUSADO', 'FINALIZADO', 'CANCELADO'].map((value) => ({ value, label: value }));
 const estadoTareaOptions = ['PENDIENTE', 'EN_PROGRESO', 'BLOQUEADA', 'COMPLETADA', 'CANCELADA'].map((value) => ({ value, label: value }));
@@ -546,6 +546,26 @@ function ParticipantTimeline({ participantes, proyectos }) {
   );
 }
 
+function SyncButton({ synced, onSync, onUnsync, loading }) {
+  if (loading) {
+    return <button type="button" className="btn btn-sm btn-outline-secondary rounded-pill px-2" disabled>Sincronizando...</button>;
+  }
+
+  if (synced) {
+    return (
+      <button type="button" className="btn btn-sm btn-outline-success rounded-pill px-2" onClick={onUnsync}>
+        <>&#x2713;</> Calendar
+      </button>
+    );
+  }
+
+  return (
+    <button type="button" className="btn btn-sm btn-outline-info rounded-pill px-2" onClick={onSync}>
+      <>&#x1F4C5;</> Sync
+    </button>
+  );
+}
+
 function AdminTabs({ active, onChange }) {
   const tabs = [
     { key: 'proyectos', label: 'Proyectos' },
@@ -580,7 +600,7 @@ function AdminTabs({ active, onChange }) {
   );
 }
 
-function AdminActionButtons({ item, onEdit, onDelete, onActivate, onDeactivate }) {
+function AdminActionButtons({ item, onEdit, onDelete, onActivate, onDeactivate, onSync, onUnsync, synced, syncLoading }) {
   return (
     <div className="d-flex justify-content-xl-end flex-wrap gap-1">
       <button type="button" className="btn btn-sm btn-outline-primary rounded-pill px-2" onClick={() => onEdit(item)}>
@@ -600,6 +620,8 @@ function AdminActionButtons({ item, onEdit, onDelete, onActivate, onDeactivate }
           Activar
         </button>
       )}
+
+      <SyncButton synced={synced} onSync={onSync} onUnsync={onUnsync} loading={syncLoading} />
     </div>
   );
 }
@@ -627,7 +649,7 @@ function AdminPanel({ title, description, createLabel, onCreate, children }) {
   );
 }
 
-function AdminProjectLine({ proyecto, tareas, participantes, onEdit, onDelete, onActivate, onDeactivate }) {
+function AdminProjectLine({ proyecto, tareas, participantes, onEdit, onDelete, onActivate, onDeactivate, onSync, onUnsync, synced, syncLoading }) {
   const tone = getEstadoProyectoTone(proyecto.estado);
   const avance = toNumber(proyecto.porcentajeAvance);
   const tareasProyecto = tareas.filter((item) => toNumber(item.idProyecto) === toNumber(proyecto.id));
@@ -665,6 +687,10 @@ function AdminProjectLine({ proyecto, tareas, participantes, onEdit, onDelete, o
             onDelete={onDelete}
             onActivate={onActivate}
             onDeactivate={onDeactivate}
+            onSync={onSync}
+            onUnsync={onUnsync}
+            synced={synced}
+            syncLoading={syncLoading}
           />
         </div>
       </div>
@@ -672,7 +698,7 @@ function AdminProjectLine({ proyecto, tareas, participantes, onEdit, onDelete, o
   );
 }
 
-function AdminTaskLine({ tarea, proyectos, onEdit, onDelete, onActivate, onDeactivate }) {
+function AdminTaskLine({ tarea, proyectos, onEdit, onDelete, onActivate, onDeactivate, onSync, onUnsync, synced, syncLoading }) {
   const estadoTone = getEstadoTareaTone(tarea.estado);
   const prioridadTone = getPrioridadTone(tarea.prioridad);
   const avance = toNumber(tarea.porcentajeAvance);
@@ -712,6 +738,10 @@ function AdminTaskLine({ tarea, proyectos, onEdit, onDelete, onActivate, onDeact
             onDelete={onDelete}
             onActivate={onActivate}
             onDeactivate={onDeactivate}
+            onSync={onSync}
+            onUnsync={onUnsync}
+            synced={synced}
+            syncLoading={syncLoading}
           />
         </div>
       </div>
@@ -899,6 +929,7 @@ export default function ProjectsPage({ session, token, onError }) {
   const [proyectos, setProyectos] = useState([]);
   const [tareas, setTareas] = useState([]);
   const [participantes, setParticipantes] = useState([]);
+  const [vinculos, setVinculos] = useState([]);
   const [tabActivo, setTabActivo] = useState('linea-proyectos');
   const [adminActivo, setAdminActivo] = useState('proyectos');
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState('todos');
@@ -906,15 +937,17 @@ export default function ProjectsPage({ session, token, onError }) {
 
   const loadAll = async () => {
     try {
-      const [proyectosData, tareasData, participantesData] = await Promise.all([
+      const [proyectosData, tareasData, participantesData, vinculosData] = await Promise.all([
         proyectosApi.listarProyectos(token),
         proyectosApi.listarTareas(token),
         proyectosApi.listarParticipantes(token),
+        calendarioApi.listarVinculos(token),
       ]);
 
       setProyectos(proyectosData);
       setTareas(tareasData);
       setParticipantes(participantesData);
+      setVinculos(vinculosData);
     } catch (error) {
       onError(error.message);
     }
@@ -1033,6 +1066,74 @@ export default function ProjectsPage({ session, token, onError }) {
     setModalAdmin(null);
   };
 
+  const [syncLoadingId, setSyncLoadingId] = useState(null);
+
+  function isSynced(tipo, id) {
+    return vinculos.some((v) => v.entidadTipo === tipo && String(v.entidadId) === String(id));
+  }
+
+  const handleSyncProyecto = async (proyecto) => {
+    setSyncLoadingId(`proyecto-${proyecto.id}`);
+    try {
+      await calendarioApi.sincronizarProyecto(proyecto.id, {
+        titulo: proyecto.nombre,
+        descripcion: proyecto.descripcion,
+        fechaInicio: proyecto.fechaInicio,
+        fechaFin: proyecto.fechaFinEstimada,
+      }, token);
+      const vinculosActualizados = await calendarioApi.listarVinculos(token);
+      setVinculos(vinculosActualizados);
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setSyncLoadingId(null);
+    }
+  };
+
+  const handleUnsyncProyecto = async (proyecto) => {
+    setSyncLoadingId(`proyecto-${proyecto.id}`);
+    try {
+      await calendarioApi.eliminarSincronizacionProyecto(proyecto.id, token);
+      const vinculosActualizados = await calendarioApi.listarVinculos(token);
+      setVinculos(vinculosActualizados);
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setSyncLoadingId(null);
+    }
+  };
+
+  const handleSyncTarea = async (tarea) => {
+    setSyncLoadingId(`tarea-${tarea.id}`);
+    try {
+      await calendarioApi.sincronizarTarea(tarea.id, {
+        titulo: tarea.titulo,
+        descripcion: tarea.descripcion,
+        fechaInicio: tarea.fechaInicio,
+        fechaFin: tarea.fechaFinEstimada,
+      }, token);
+      const vinculosActualizados = await calendarioApi.listarVinculos(token);
+      setVinculos(vinculosActualizados);
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setSyncLoadingId(null);
+    }
+  };
+
+  const handleUnsyncTarea = async (tarea) => {
+    setSyncLoadingId(`tarea-${tarea.id}`);
+    try {
+      await calendarioApi.eliminarSincronizacionTarea(tarea.id, token);
+      const vinculosActualizados = await calendarioApi.listarVinculos(token);
+      setVinculos(vinculosActualizados);
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setSyncLoadingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
@@ -1129,6 +1230,10 @@ export default function ProjectsPage({ session, token, onError }) {
                   onDelete={(item) => runAction(() => proyectosApi.eliminarProyecto(item.id, token))}
                   onActivate={(item) => runAction(() => proyectosApi.activarProyecto(item.id, token))}
                   onDeactivate={(item) => runAction(() => proyectosApi.desactivarProyecto(item.id, token))}
+                  onSync={() => handleSyncProyecto(proyecto)}
+                  onUnsync={() => handleUnsyncProyecto(proyecto)}
+                  synced={isSynced('PROYECTO', proyecto.id)}
+                  syncLoading={syncLoadingId === `proyecto-${proyecto.id}`}
                 />
               ))}
             </AdminPanel>
@@ -1150,6 +1255,10 @@ export default function ProjectsPage({ session, token, onError }) {
                   onDelete={(item) => runAction(() => proyectosApi.eliminarTarea(item.id, token))}
                   onActivate={(item) => runAction(() => proyectosApi.activarTarea(item.id, token))}
                   onDeactivate={(item) => runAction(() => proyectosApi.desactivarTarea(item.id, token))}
+                  onSync={() => handleSyncTarea(tarea)}
+                  onUnsync={() => handleUnsyncTarea(tarea)}
+                  synced={isSynced('TAREA', tarea.id)}
+                  syncLoading={syncLoadingId === `tarea-${tarea.id}`}
                 />
               ))}
             </AdminPanel>

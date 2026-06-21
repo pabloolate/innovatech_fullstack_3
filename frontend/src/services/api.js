@@ -100,6 +100,15 @@ export const recursosApi = {
   eliminarDisponibilidad: (id, token) => request(`/api/disponibilidades-recurso/${id}`, { method: 'DELETE' }, token),
 };
 
+export const calendarioApi = {
+  sincronizarTarea: (id, body, token) => request(`/api/calendario/tareas/${id}/sync`, { method: 'POST', body }, token),
+  sincronizarProyecto: (id, body, token) => request(`/api/calendario/proyectos/${id}/sync`, { method: 'POST', body }, token),
+  eliminarSincronizacionTarea: (id, token) => request(`/api/calendario/tareas/${id}/unsync`, { method: 'POST' }, token),
+  eliminarSincronizacionProyecto: (id, token) => request(`/api/calendario/proyectos/${id}/unsync`, { method: 'POST' }, token),
+  listarEventos: (token) => request('/api/calendario/eventos', { method: 'GET' }, token),
+  listarVinculos: (token) => request('/api/calendario/vinculos', { method: 'GET' }, token),
+};
+
 export const monitoreoApi = {
   listarKpiGeneral: (token) => request('/api/kpi-general', { method: 'GET' }, token),
   crearKpiGeneral: (body, token) => request('/api/kpi-general', { method: 'POST', body }, token),
