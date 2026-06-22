@@ -925,6 +925,97 @@ function AdminFormModal({ title, fields, item, onClose, onSubmit }) {
   );
 }
 
+function SyncFormModal({ data, onClose, onSubmit }) {
+  const [form, setForm] = useState({ ...data });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    await onSubmit({
+      titulo: form.titulo,
+      descripcion: form.descripcion || '',
+      fechaInicio: form.fechaInicio,
+      fechaFin: form.fechaFin || null,
+    });
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="modal d-block" tabIndex="-1" style={{ background: 'rgba(15, 23, 42, 0.45)' }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <form className="modal-content border-0 shadow rounded-4" onSubmit={handleSubmit}>
+          <div className="modal-header">
+            <div>
+              <h5 className="modal-title">Sincronizar con Google Calendar</h5>
+              <div className="small text-muted">Configura los datos del evento antes de sincronizar.</div>
+            </div>
+            <button type="button" className="btn-close" onClick={onClose} />
+          </div>
+
+          <div className="modal-body">
+            <div className="row g-3">
+              <div className="col-12">
+                <label className="form-label small fw-semibold">Título del evento</label>
+                <input
+                  className="form-control form-control-sm"
+                  value={form.titulo ?? ''}
+                  required
+                  onChange={(e) => handleChange('titulo', e.target.value)}
+                />
+              </div>
+
+              <div className="col-12">
+                <label className="form-label small fw-semibold">Descripción</label>
+                <textarea
+                  className="form-control form-control-sm"
+                  rows={3}
+                  value={form.descripcion ?? ''}
+                  onChange={(e) => handleChange('descripcion', e.target.value)}
+                />
+              </div>
+
+              <div className="col-12 col-md-6">
+                <label className="form-label small fw-semibold">Fecha inicio</label>
+                <input
+                  className="form-control form-control-sm"
+                  type="date"
+                  value={form.fechaInicio ?? ''}
+                  required
+                  onChange={(e) => handleChange('fechaInicio', e.target.value)}
+                />
+              </div>
+
+              <div className="col-12 col-md-6">
+                <label className="form-label small fw-semibold">Fecha fin</label>
+                <input
+                  className="form-control form-control-sm"
+                  type="date"
+                  value={form.fechaFin ?? ''}
+                  onChange={(e) => handleChange('fechaFin', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn btn-sm btn-outline-secondary rounded-pill px-3" onClick={onClose}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn btn-sm btn-info rounded-pill px-3" disabled={submitting}>
+              {submitting ? 'Sincronizando...' : 'Sincronizar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectsPage({ session, token, onError }) {
   const [proyectos, setProyectos] = useState([]);
   const [tareas, setTareas] = useState([]);
@@ -1072,22 +1163,17 @@ export default function ProjectsPage({ session, token, onError }) {
     return vinculos.some((v) => v.entidadTipo === tipo && String(v.entidadId) === String(id));
   }
 
-  const handleSyncProyecto = async (proyecto) => {
-    setSyncLoadingId(`proyecto-${proyecto.id}`);
-    try {
-      await calendarioApi.sincronizarProyecto(proyecto.id, {
-        titulo: proyecto.nombre,
-        descripcion: proyecto.descripcion,
-        fechaInicio: proyecto.fechaInicio,
-        fechaFin: proyecto.fechaFinEstimada,
-      }, token);
-      const vinculosActualizados = await calendarioApi.listarVinculos(token);
-      setVinculos(vinculosActualizados);
-    } catch (error) {
-      onError(error.message);
-    } finally {
-      setSyncLoadingId(null);
-    }
+  const [syncModal, setSyncModal] = useState(null);
+
+  const handleSyncProyecto = (proyecto) => {
+    setSyncModal({
+      tipo: 'PROYECTO',
+      id: proyecto.id,
+      titulo: proyecto.nombre,
+      descripcion: proyecto.descripcion,
+      fechaInicio: toInputDate(proyecto.fechaInicio),
+      fechaFin: toInputDate(proyecto.fechaFinEstimada),
+    });
   };
 
   const handleUnsyncProyecto = async (proyecto) => {
@@ -1103,15 +1189,21 @@ export default function ProjectsPage({ session, token, onError }) {
     }
   };
 
-  const handleSyncTarea = async (tarea) => {
+  const handleSyncTarea = (tarea) => {
+    setSyncModal({
+      tipo: 'TAREA',
+      id: tarea.id,
+      titulo: tarea.titulo,
+      descripcion: tarea.descripcion,
+      fechaInicio: toInputDate(tarea.fechaInicio),
+      fechaFin: toInputDate(tarea.fechaFinEstimada),
+    });
+  };
+
+  const handleUnsyncTarea = async (tarea) => {
     setSyncLoadingId(`tarea-${tarea.id}`);
     try {
-      await calendarioApi.sincronizarTarea(tarea.id, {
-        titulo: tarea.titulo,
-        descripcion: tarea.descripcion,
-        fechaInicio: tarea.fechaInicio,
-        fechaFin: tarea.fechaFinEstimada,
-      }, token);
+      await calendarioApi.eliminarSincronizacionTarea(tarea.id, token);
       const vinculosActualizados = await calendarioApi.listarVinculos(token);
       setVinculos(vinculosActualizados);
     } catch (error) {
@@ -1121,12 +1213,18 @@ export default function ProjectsPage({ session, token, onError }) {
     }
   };
 
-  const handleUnsyncTarea = async (tarea) => {
-    setSyncLoadingId(`tarea-${tarea.id}`);
+  const handleSyncSubmit = async (data) => {
+    if (!syncModal) return;
+    setSyncLoadingId(`${syncModal.tipo.toLowerCase()}-${syncModal.id}`);
     try {
-      await calendarioApi.eliminarSincronizacionTarea(tarea.id, token);
+      if (syncModal.tipo === 'PROYECTO') {
+        await calendarioApi.sincronizarProyecto(syncModal.id, data, token);
+      } else {
+        await calendarioApi.sincronizarTarea(syncModal.id, data, token);
+      }
       const vinculosActualizados = await calendarioApi.listarVinculos(token);
       setVinculos(vinculosActualizados);
+      setSyncModal(null);
     } catch (error) {
       onError(error.message);
     } finally {
@@ -1294,6 +1392,14 @@ export default function ProjectsPage({ session, token, onError }) {
           item={modalAdmin.item}
           onClose={() => setModalAdmin(null)}
           onSubmit={handleSubmitAdmin}
+        />
+      ) : null}
+
+      {syncModal ? (
+        <SyncFormModal
+          data={syncModal}
+          onClose={() => setSyncModal(null)}
+          onSubmit={handleSyncSubmit}
         />
       ) : null}
     </div>

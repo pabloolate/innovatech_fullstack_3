@@ -16,75 +16,82 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping(&quot;/api/calendario&quot;)
 public class CalendarioController {
 
+<span class="nc" id="L26">    private static final Logger log = LoggerFactory.getLogger(CalendarioController.class);</span>
     private final SincronizacionService sincronizacionService;
 
-<span class="nc" id="L26">    public CalendarioController(SincronizacionService sincronizacionService) {</span>
-<span class="nc" id="L27">        this.sincronizacionService = sincronizacionService;</span>
-<span class="nc" id="L28">    }</span>
+<span class="nc" id="L29">    public CalendarioController(SincronizacionService sincronizacionService) {</span>
+<span class="nc" id="L30">        this.sincronizacionService = sincronizacionService;</span>
+<span class="nc" id="L31">    }</span>
 
     @PostMapping(&quot;/tareas/{idTarea}/sync&quot;)
-    public ResponseEntity&lt;EventoCalendarioDto&gt; sincronizarTarea(
+    public ResponseEntity&lt;?&gt; sincronizarTarea(
             @PathVariable Long idTarea,
             @Valid @RequestBody SincronizarRequestDto dto) {
         try {
-<span class="nc" id="L35">            return ResponseEntity.ok(sincronizacionService.sincronizarTarea(idTarea, dto));</span>
-<span class="nc" id="L36">        } catch (IOException e) {</span>
-<span class="nc" id="L37">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+<span class="nc" id="L38">            return ResponseEntity.ok(sincronizacionService.sincronizarTarea(idTarea, dto));</span>
+<span class="nc" id="L39">        } catch (IOException e) {</span>
+<span class="nc" id="L40">            log.error(&quot;Error al sincronizar tarea {} con Google Calendar: {}&quot;, idTarea, e.getMessage(), e);</span>
+<span class="nc" id="L41">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L42">                    .body(&quot;Error al sincronizar con Google Calendar: &quot; + e.getMessage());</span>
         }
     }
 
     @PostMapping(&quot;/proyectos/{idProyecto}/sync&quot;)
-    public ResponseEntity&lt;EventoCalendarioDto&gt; sincronizarProyecto(
+    public ResponseEntity&lt;?&gt; sincronizarProyecto(
             @PathVariable Long idProyecto,
             @Valid @RequestBody SincronizarRequestDto dto) {
         try {
-<span class="nc" id="L46">            return ResponseEntity.ok(sincronizacionService.sincronizarProyecto(idProyecto, dto));</span>
-<span class="nc" id="L47">        } catch (IOException e) {</span>
-<span class="nc" id="L48">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+<span class="nc" id="L51">            return ResponseEntity.ok(sincronizacionService.sincronizarProyecto(idProyecto, dto));</span>
+<span class="nc" id="L52">        } catch (IOException e) {</span>
+<span class="nc" id="L53">            log.error(&quot;Error al sincronizar proyecto {} con Google Calendar: {}&quot;, idProyecto, e.getMessage(), e);</span>
+<span class="nc" id="L54">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L55">                    .body(&quot;Error al sincronizar con Google Calendar: &quot; + e.getMessage());</span>
         }
     }
 
     @PostMapping(&quot;/tareas/{idTarea}/unsync&quot;)
     public ResponseEntity&lt;Void&gt; eliminarSincronizacionTarea(@PathVariable Long idTarea) {
         try {
-<span class="nc" id="L55">            sincronizacionService.eliminarSincronizacion(&quot;TAREA&quot;, idTarea);</span>
-<span class="nc" id="L56">            return ResponseEntity.noContent().build();</span>
-<span class="nc" id="L57">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L58">            return ResponseEntity.notFound().build();</span>
-<span class="nc" id="L59">        } catch (IOException e) {</span>
-<span class="nc" id="L60">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+<span class="nc" id="L62">            sincronizacionService.eliminarSincronizacion(&quot;TAREA&quot;, idTarea);</span>
+<span class="nc" id="L63">            return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L64">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L65">            return ResponseEntity.notFound().build();</span>
+<span class="nc" id="L66">        } catch (IOException e) {</span>
+<span class="nc" id="L67">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
         }
     }
 
     @PostMapping(&quot;/proyectos/{idProyecto}/unsync&quot;)
     public ResponseEntity&lt;Void&gt; eliminarSincronizacionProyecto(@PathVariable Long idProyecto) {
         try {
-<span class="nc" id="L67">            sincronizacionService.eliminarSincronizacion(&quot;PROYECTO&quot;, idProyecto);</span>
-<span class="nc" id="L68">            return ResponseEntity.noContent().build();</span>
-<span class="nc" id="L69">        } catch (RuntimeException e) {</span>
-<span class="nc" id="L70">            return ResponseEntity.notFound().build();</span>
-<span class="nc" id="L71">        } catch (IOException e) {</span>
-<span class="nc" id="L72">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+<span class="nc" id="L74">            sincronizacionService.eliminarSincronizacion(&quot;PROYECTO&quot;, idProyecto);</span>
+<span class="nc" id="L75">            return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L76">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L77">            return ResponseEntity.notFound().build();</span>
+<span class="nc" id="L78">        } catch (IOException e) {</span>
+<span class="nc" id="L79">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
         }
     }
 
     @GetMapping(&quot;/eventos&quot;)
     public ResponseEntity&lt;List&lt;EventoCalendarioDto&gt;&gt; listarEventos() {
         try {
-<span class="nc" id="L79">            return ResponseEntity.ok(sincronizacionService.listarEventos());</span>
-<span class="nc" id="L80">        } catch (IOException e) {</span>
-<span class="nc" id="L81">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+<span class="nc" id="L86">            return ResponseEntity.ok(sincronizacionService.listarEventos());</span>
+<span class="nc" id="L87">        } catch (IOException e) {</span>
+<span class="nc" id="L88">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
         }
     }
 
     @GetMapping(&quot;/vinculos&quot;)
     public ResponseEntity&lt;List&lt;VinculoCalendario&gt;&gt; listarVinculos() {
-<span class="nc" id="L87">        return ResponseEntity.ok(sincronizacionService.listarVinculos());</span>
+<span class="nc" id="L94">        return ResponseEntity.ok(sincronizacionService.listarVinculos());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

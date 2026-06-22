@@ -16,11 +16,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/calendario")
 public class CalendarioController {
 
+    private static final Logger log = LoggerFactory.getLogger(CalendarioController.class);
     private final SincronizacionService sincronizacionService;
 
     public CalendarioController(SincronizacionService sincronizacionService) {
@@ -28,24 +31,28 @@ public class CalendarioController {
     }
 
     @PostMapping("/tareas/{idTarea}/sync")
-    public ResponseEntity<EventoCalendarioDto> sincronizarTarea(
+    public ResponseEntity<?> sincronizarTarea(
             @PathVariable Long idTarea,
             @Valid @RequestBody SincronizarRequestDto dto) {
         try {
             return ResponseEntity.ok(sincronizacionService.sincronizarTarea(idTarea, dto));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Error al sincronizar tarea {} con Google Calendar: {}", idTarea, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al sincronizar con Google Calendar: " + e.getMessage());
         }
     }
 
     @PostMapping("/proyectos/{idProyecto}/sync")
-    public ResponseEntity<EventoCalendarioDto> sincronizarProyecto(
+    public ResponseEntity<?> sincronizarProyecto(
             @PathVariable Long idProyecto,
             @Valid @RequestBody SincronizarRequestDto dto) {
         try {
             return ResponseEntity.ok(sincronizacionService.sincronizarProyecto(idProyecto, dto));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Error al sincronizar proyecto {} con Google Calendar: {}", idProyecto, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al sincronizar con Google Calendar: " + e.getMessage());
         }
     }
 
