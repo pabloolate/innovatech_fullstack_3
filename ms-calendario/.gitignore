@@ -1,0 +1,6 @@
+**/target/
+**/*service-account*.json
+**/service-account-key.json
+ms-calendario/src/main/resources/service-account-key.json
+
+# Google service account keys

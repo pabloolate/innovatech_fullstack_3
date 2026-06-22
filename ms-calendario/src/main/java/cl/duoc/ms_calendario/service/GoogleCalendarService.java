@@ -7,9 +7,9 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +33,7 @@ public class GoogleCalendarService {
 
     public String crearEvento(String titulo, String descripcion,
                               LocalDate fechaInicio, LocalDate fechaFin,
+                              String horaInicio, String horaFin,
                               String ubicacion) throws IOException {
 
         Event event = new Event()
@@ -40,17 +41,7 @@ public class GoogleCalendarService {
                 .setDescription(descripcion)
                 .setLocation(ubicacion);
 
-        ZonedDateTime inicio = fechaInicio.atStartOfDay(ZoneId.of(timezone.getID()));
-        ZonedDateTime fin = fechaFin != null
-                ? fechaFin.atStartOfDay(ZoneId.of(timezone.getID()))
-                : inicio.plusHours(1);
-
-        event.setStart(new EventDateTime()
-                .setDateTime(new DateTime(inicio.toInstant().toEpochMilli()))
-                .setTimeZone(timezone.getID()));
-        event.setEnd(new EventDateTime()
-                .setDateTime(new DateTime(fin.toInstant().toEpochMilli()))
-                .setTimeZone(timezone.getID()));
+        aplicarFechas(event, fechaInicio, fechaFin, horaInicio, horaFin);
 
         Event creado = calendarService.events().insert(calendarId, event).execute();
         return creado.getId();
@@ -58,6 +49,7 @@ public class GoogleCalendarService {
 
     public void actualizarEvento(String idEventoGoogle, String titulo, String descripcion,
                                  LocalDate fechaInicio, LocalDate fechaFin,
+                                 String horaInicio, String horaFin,
                                  String ubicacion) throws IOException {
 
         Event event = calendarService.events().get(calendarId, idEventoGoogle).execute();
@@ -65,19 +57,49 @@ public class GoogleCalendarService {
         event.setDescription(descripcion);
         event.setLocation(ubicacion);
 
-        ZonedDateTime inicio = fechaInicio.atStartOfDay(ZoneId.of(timezone.getID()));
-        ZonedDateTime fin = fechaFin != null
-                ? fechaFin.atStartOfDay(ZoneId.of(timezone.getID()))
-                : inicio.plusHours(1);
-
-        event.setStart(new EventDateTime()
-                .setDateTime(new DateTime(inicio.toInstant().toEpochMilli()))
-                .setTimeZone(timezone.getID()));
-        event.setEnd(new EventDateTime()
-                .setDateTime(new DateTime(fin.toInstant().toEpochMilli()))
-                .setTimeZone(timezone.getID()));
+        aplicarFechas(event, fechaInicio, fechaFin, horaInicio, horaFin);
 
         calendarService.events().update(calendarId, idEventoGoogle, event).execute();
+    }
+
+    private void aplicarFechas(Event event, LocalDate fechaInicio, LocalDate fechaFin,
+                               String horaInicio, String horaFin) {
+        ZoneId zoneId = ZoneId.of(timezone.getID());
+        boolean tieneHoraInicio = horaInicio != null && !horaInicio.isBlank();
+
+        if (tieneHoraInicio) {
+            LocalTime horaInicioEvento = LocalTime.parse(horaInicio);
+            LocalTime horaFinEvento = horaFin != null && !horaFin.isBlank()
+                    ? LocalTime.parse(horaFin)
+                    : horaInicioEvento.plusHours(1);
+
+            LocalDate fechaFinEvento = fechaFin != null ? fechaFin : fechaInicio;
+
+            ZonedDateTime inicio = ZonedDateTime.of(fechaInicio, horaInicioEvento, zoneId);
+            ZonedDateTime fin = ZonedDateTime.of(fechaFinEvento, horaFinEvento, zoneId);
+
+            if (!fin.isAfter(inicio)) {
+                fin = inicio.plusHours(1);
+            }
+
+            event.setStart(new EventDateTime()
+                    .setDateTime(new DateTime(inicio.toInstant().toEpochMilli()))
+                    .setTimeZone(timezone.getID()));
+            event.setEnd(new EventDateTime()
+                    .setDateTime(new DateTime(fin.toInstant().toEpochMilli()))
+                    .setTimeZone(timezone.getID()));
+
+            return;
+        }
+
+        LocalDate fechaFinDiaCompleto = fechaFin != null ? fechaFin.plusDays(1) : fechaInicio.plusDays(1);
+
+        event.setStart(new EventDateTime()
+                .setDate(new DateTime(fechaInicio.toString()))
+                .setTimeZone(timezone.getID()));
+        event.setEnd(new EventDateTime()
+                .setDate(new DateTime(fechaFinDiaCompleto.toString()))
+                .setTimeZone(timezone.getID()));
     }
 
     public void eliminarEvento(String idEventoGoogle) throws IOException {

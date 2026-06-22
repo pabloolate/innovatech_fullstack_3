@@ -39,10 +39,12 @@ public class SincronizacionService {
         if (vinculoOpt.isPresent()) {
             idEventoGoogle = vinculoOpt.get().getIdEventoGoogle();
             calendarService.actualizarEvento(idEventoGoogle, dto.getTitulo(),
-                    dto.getDescripcion(), fechaInicio, fechaFin, dto.getUbicacion());
+                    dto.getDescripcion(), fechaInicio, fechaFin,
+                    dto.getHoraInicio(), dto.getHoraFin(), dto.getUbicacion());
         } else {
             idEventoGoogle = calendarService.crearEvento(dto.getTitulo(),
-                    dto.getDescripcion(), fechaInicio, fechaFin, dto.getUbicacion());
+                    dto.getDescripcion(), fechaInicio, fechaFin,
+                    dto.getHoraInicio(), dto.getHoraFin(), dto.getUbicacion());
 
             var vinculo = VinculoCalendario.builder()
                     .entidadTipo("TAREA")
@@ -77,10 +79,12 @@ public class SincronizacionService {
         if (vinculoOpt.isPresent()) {
             idEventoGoogle = vinculoOpt.get().getIdEventoGoogle();
             calendarService.actualizarEvento(idEventoGoogle, dto.getTitulo(),
-                    dto.getDescripcion(), fechaInicio, fechaFin, dto.getUbicacion());
+                    dto.getDescripcion(), fechaInicio, fechaFin,
+                    dto.getHoraInicio(), dto.getHoraFin(), dto.getUbicacion());
         } else {
             idEventoGoogle = calendarService.crearEvento(dto.getTitulo(),
-                    dto.getDescripcion(), fechaInicio, fechaFin, dto.getUbicacion());
+                    dto.getDescripcion(), fechaInicio, fechaFin,
+                    dto.getHoraInicio(), dto.getHoraFin(), dto.getUbicacion());
 
             var vinculo = VinculoCalendario.builder()
                     .entidadTipo("PROYECTO")
